@@ -3,6 +3,7 @@ import User from '../models/User';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { validate, updateUserSchema } from '../utils/validation';
 import { getIO, EVENTS } from '../config/socket';
+import { UserRole } from '../types';
 
 const router = Router();
 
@@ -92,7 +93,15 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const { username, avatar, pushToken } = req.body;
+    const { username, avatar, pushToken, role } = req.body;
+
+    if (role !== undefined) {
+      res.status(403).json({
+        success: false,
+        message: 'Role cannot be changed via this endpoint. Contact an admin.',
+      });
+      return;
+    }
 
     const updateData: Record<string, string> = {};
     if (username) updateData.username = username;
@@ -198,6 +207,64 @@ router.get('/stats/admin', authenticate, authorize('admin'), async (req: AuthReq
     });
   } catch (error) {
     console.error('Get stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+});
+
+router.patch('/:id/role', authenticate, authorize('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.params.id;
+    const { role } = req.body;
+
+    if (!role) {
+      res.status(400).json({
+        success: false,
+        message: 'Role is required',
+      });
+      return;
+    }
+
+    const validRoles: UserRole[] = ['admin', 'agent', 'customer', 'designer', 'merchant'];
+    if (!validRoles.includes(role)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid role',
+      });
+      return;
+    }
+
+    if (userId === req.user?._id.toString()) {
+      res.status(400).json({
+        success: false,
+        message: 'You cannot change your own role',
+      });
+      return;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { role } },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: user,
+      message: 'User role updated successfully',
+    });
+  } catch (error) {
+    console.error('Update role error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

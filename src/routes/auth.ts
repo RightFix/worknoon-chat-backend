@@ -20,7 +20,7 @@ const generateToken = (userId: string, role: string): string => {
 
 router.post('/register', validate(registerSchema), async (req, res: Response): Promise<void> => {
   try {
-    const { email, username, password, role } = req.body as RegisterInput;
+    const { email, username, password } = req.body as RegisterInput;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -35,7 +35,6 @@ router.post('/register', validate(registerSchema), async (req, res: Response): P
       email,
       username,
       password,
-      role: role || 'customer',
     });
 
     const token = generateToken(user._id.toString(), user.role);
