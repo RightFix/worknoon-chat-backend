@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { Request, Response } from 'express';
 
 export const registerSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -43,8 +44,8 @@ export const paginationSchema = Joi.object({
 });
 
 export const validate = (schema: Joi.Schema) => {
-  return (req: unknown, res: unknown, next: () => void) => {
-    const { error } = schema.validate(req);
+  return (req: Request, res: Response, next: () => void) => {
+    const { error } = schema.validate(req.body);
     if (error) {
       res.status(400).json({
         success: false,

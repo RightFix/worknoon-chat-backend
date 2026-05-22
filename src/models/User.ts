@@ -11,6 +11,8 @@ export interface IUserDocument extends Document {
   isOnline: boolean;
   lastSeen: Date;
   pushToken?: string;
+  createdAt: Date;
+  updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 

@@ -3,7 +3,7 @@ import Message from '../models/Message';
 import Conversation from '../models/Conversation';
 import User from '../models/User';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { triggerEvent, CHANNELS, EVENTS } from '../config/pusher';
+import { getIO, EVENTS } from '../config/socket';
 import { SendMessageInput } from '../types';
 
 const router = Router();
@@ -110,23 +110,16 @@ router.post('/:conversationId', authenticate, async (req: AuthRequest, res: Resp
       .populate('sender', 'username email role avatar')
       .populate('readBy', 'username');
 
-    await triggerEvent(
-      CHANNELS.CONVERSATION(conversationId),
-      EVENTS.NEW_MESSAGE,
-      { message: populatedMessage }
-    );
+    const io = getIO();
+    io.to(`conversation-${conversationId}`).emit(EVENTS.NEW_MESSAGE, { message: populatedMessage });
 
     for (const participantId of conversation.participants) {
       if (participantId.toString() !== senderId?.toString()) {
-        await triggerEvent(
-          CHANNELS.USER(participantId.toString()),
-          EVENTS.NOTIFICATION,
-          {
-            type: 'new_message',
-            conversationId,
-            message: populatedMessage,
-          }
-        );
+        io.to(`user-${participantId.toString()}`).emit(EVENTS.NOTIFICATION, {
+          type: 'new_message',
+          conversationId,
+          message: populatedMessage,
+        });
       }
     }
 
@@ -164,11 +157,8 @@ router.put('/:messageId/read', authenticate, async (req: AuthRequest, res: Respo
       await message.save();
     }
 
-    await triggerEvent(
-      CHANNELS.CONVERSATION(message.conversationId.toString()),
-      EVENTS.MESSAGE_READ,
-      { messageId, userId }
-    );
+    const io = getIO();
+    io.to(`conversation-${message.conversationId.toString()}`).emit(EVENTS.MESSAGE_READ, { messageId, userId });
 
     res.json({
       success: true,

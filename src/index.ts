@@ -2,10 +2,12 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 
 dotenv.config();
 
 import { connectDB } from './config/db';
+import { initializeSocket } from './config/socket';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import conversationRoutes from './routes/conversations';
@@ -50,7 +52,10 @@ const startServer = async () => {
   try {
     await connectDB();
     
-    app.listen(PORT, () => {
+    const httpServer = createServer(app);
+    initializeSocket(httpServer);
+    
+    httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (error) {

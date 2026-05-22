@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import User from '../models/User';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { validate, updateUserSchema } from '../utils/validation';
-import { triggerEvent, CHANNELS, EVENTS } from '../config/pusher';
+import { getIO, EVENTS } from '../config/socket';
 
 const router = Router();
 
@@ -158,8 +158,8 @@ router.put('/:id/status', authenticate, async (req: AuthRequest, res: Response):
       return;
     }
 
-    await triggerEvent(
-      CHANNELS.USER(user._id.toString()),
+    const io = getIO();
+    io.to(`user-${user._id.toString()}`).emit(
       isOnline ? EVENTS.USER_ONLINE : EVENTS.USER_OFFLINE,
       { userId: user._id, isOnline }
     );
