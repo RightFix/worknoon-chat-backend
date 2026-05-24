@@ -6,6 +6,27 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { getIO, EVENTS } from '../config/socket';
 import { SendMessageInput } from '../types';
 
+/**
+ * @swagger
+ * /api/messages/{conversationId}:
+ *   get:
+ *     summary: Get messages for a conversation
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of messages
+ *       403:
+ *         description: Not a participant
+ */
+
 const router = Router();
 
 router.get('/:conversationId', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {

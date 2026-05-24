@@ -5,6 +5,53 @@ import { validate, updateUserSchema } from '../utils/validation';
 import { getIO, EVENTS } from '../config/socket';
 import { UserRole } from '../types';
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
+
+/**
+ * @swagger
+ * /api/users/stats/admin:
+ *   get:
+ *     summary: Get user statistics (admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User statistics
+ *       403:
+ *         description: Forbidden
+ */
+
 const router = Router();
 
 router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {

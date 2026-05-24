@@ -22,7 +22,6 @@ const userSchema = new Schema<IUserDocument>(
       type: String,
       required: [true, 'Email is required'],
       unique: true,
-      lowercase: true,
       trim: true,
     },
     username: {
@@ -42,6 +41,7 @@ const userSchema = new Schema<IUserDocument>(
       type: String,
       enum: ['admin', 'agent', 'customer', 'designer', 'merchant'],
       default: 'customer',
+      required: [true, 'Role is required']
     },
     avatar: {
       type: String,

@@ -13,6 +13,9 @@ export const authenticate = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
   try {
     const authHeader = req.headers.authorization;
 
@@ -25,9 +28,16 @@ export const authenticate = async (
     }
 
     const token = authHeader.split(' ')[1];
-    const jwtSecret = process.env.JWT_SECRET || 'default-secret';
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      res.status(500).json({
+        success: false,
+        message: 'Server configuration error.',
+      });
+      return;
+    }
 
-    const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
+    const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as JWTPayload;
     
     const user = await User.findById(decoded.userId);
 
@@ -93,9 +103,13 @@ export const optionalAuth = async (
     }
 
     const token = authHeader.split(' ')[1];
-    const jwtSecret = process.env.JWT_SECRET || 'default-secret';
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      next();
+      return;
+    }
 
-    const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
+    const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as JWTPayload;
     const user = await User.findById(decoded.userId);
 
     if (user) {

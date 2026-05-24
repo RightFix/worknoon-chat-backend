@@ -79,7 +79,7 @@ export interface RegisterInput {
   email: string;
   username: string;
   password: string;
-  role?: UserRole;
+  role: UserRole;
 }
 
 export interface LoginInput {

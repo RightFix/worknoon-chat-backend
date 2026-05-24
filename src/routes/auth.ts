@@ -5,10 +5,66 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { validate, registerSchema, loginSchema } from '../utils/validation';
 import { RegisterInput, LoginInput, JWTPayload } from '../types';
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterInput'
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Invalid input or email already exists
+ */
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginInput'
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user data
+ *       401:
+ *         description: Unauthorized
+ */
+
 const router = Router();
 
 const generateToken = (userId: string, role: string): string => {
-  const jwtSecret = process.env.JWT_SECRET || 'default-secret';
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   
   return jwt.sign(
@@ -20,7 +76,7 @@ const generateToken = (userId: string, role: string): string => {
 
 router.post('/register', validate(registerSchema), async (req, res: Response): Promise<void> => {
   try {
-    const { email, username, password } = req.body as RegisterInput;
+    const { email, username, password, role } = req.body as RegisterInput;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -35,6 +91,7 @@ router.post('/register', validate(registerSchema), async (req, res: Response): P
       email,
       username,
       password,
+      role,
     });
 
     const token = generateToken(user._id.toString(), user.role);
