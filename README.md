@@ -19,7 +19,7 @@ Real-time chat system backend for eCommerce platforms. Enables communication bet
 - **Runtime**: Node.js (TypeScript)
 - **Framework**: Express.js
 - **Database**: MongoDB with Mongoose ODM
-- **Real-time**: Pusher (WebSocket alternative for serverless)
+- **Real-time**: Socket IO (WebSocket)
 - **Authentication**: JWT (JSON Web Tokens)
 - **File Storage**: Multer (local, extensible to S3)
 - **Validation**: Joi
@@ -56,12 +56,6 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/worknoon-chat?re
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRES_IN=7d
-
-# Pusher Configuration (free tier at pusher.com)
-PUSHER_APP_ID=your-app-id
-PUSHER_KEY=your-pusher-key
-PUSHER_SECRET=your-pusher-secret
-PUSHER_CLUSTER=ap2
 
 # Server Configuration
 PORT=5000
@@ -142,30 +136,12 @@ Or connect your GitHub repository to Vercel for automatic deployments.
 | `designer` | Design professionals |
 | `merchant` | Product sellers/vendors |
 
-## Pusher Integration
-
-This backend uses Pusher instead of Socket.IO for Vercel compatibility:
-
-- Client subscribes to `user-{userId}` for personal notifications
-- Client subscribes to `conversation-{id}` for chat rooms
-- Server triggers events: `new-message`, `typing-start`, `typing-stop`, `message-read`, `user-online`, `user-offline`
-
 ## Challenges & Solutions
-
-### Serverless WebSocket Challenge
-**Challenge**: Vercel serverless functions don't support persistent WebSocket connections required by Socket.IO.
-
-**Solution**: Use Pusher (free tier) which works seamlessly with serverless architectures. It provides WebSocket-like functionality without requiring a persistent server.
 
 ### Cold Start Performance
 **Challenge**: MongoDB Atlas cold starts can be slow.
 
 **Solution**: Implemented connection pooling and keep-alive. For production, consider using connection pooling services or Atlas Data API.
-
-### File Upload on Serverless
-**Challenge**: Serverless functions have execution time limits and no persistent filesystem.
-
-**Solution**: Files are uploaded to local storage during development. For production, extend to use S3 or Cloudinary for persistent storage.
 
 ## Project Structure
 
@@ -173,7 +149,8 @@ This backend uses Pusher instead of Socket.IO for Vercel compatibility:
 src/
 ├── config/
 │   ├── db.ts          # MongoDB connection
-│   └── pusher.ts      # Pusher configuration
+│   |── socket.ts      # Socket IO configuration
+|       
 ├── models/
 │   ├── User.ts        # User model
 │   ├── Conversation.ts # Conversation model
